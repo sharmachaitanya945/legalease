@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Documents - LegalEase AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="upload-header text-center mb-5">
+                <h1 class="display-4 fw-bold text-primary">
+                    <i class="fas fa-upload me-3"></i>Upload Legal Documents
+                </h1>
+                <p class="lead text-muted">
+                    Add new legal documents to expand the knowledge base
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Upload Instructions -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>CSV Format Requirements
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Your CSV file must contain the following columns:</p>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Column Name</th>
+                                    <th>Type</th>
+                                    <th>Description</th>
+                                    <th>Example</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>doc_id</code></td>
+                                    <td>Integer</td>
+                                    <td>Unique document identifier</td>
+                                    <td>1, 2, 3...</td>
+                                </tr>
+                                <tr>
+                                    <td><code>title</code></td>
+                                    <td>String</td>
+                                    <td>Document or case title</td>
+                                    <td>Miranda v. Arizona</td>
+                                </tr>
+                                <tr>
+                                    <td><code>category</code></td>
+                                    <td>String</td>
+                                    <td>Legal category</td>
+                                    <td>Criminal Law</td>
+                                </tr>
+                                <tr>
+                                    <td><code>content</code></td>
+                                    <td>String</td>
+                                    <td>Document content or summary</td>
+                                    <td>The Supreme Court held that...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Important:</strong> Make sure your CSV file is properly formatted and uses UTF-8 encoding.
+                        Maximum file size is 16MB.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-csv me-2"></i>Upload CSV File
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <div class="mb-4">
+                            <label for="csvFile" class="form-label fw-bold">Select CSV File</label>
+                            <input type="file" 
+                                   class="form-control" 
+                                   id="csvFile" 
+                                   name="file" 
+                                   accept=".csv"
+                                   required>
+                            <div class="form-text">
+                                Choose a CSV file containing legal documents (max 16MB)
+                            </div>
+                        </div>
+
+                        <!-- File Preview -->
+                        <div id="filePreview" class="mb-4" style="display: none;">
+                            <h6>File Preview:</h6>
+                            <div class="alert alert-light">
+                                <div id="fileInfo"></div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Progress -->
+                        <div id="uploadProgress" class="mb-4" style="display: none;">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Uploading and processing...</span>
+                                <span id="progressText">0%</span>
+                            </div>
+                            <div class="progress">
+                                <div id="progressBar" 
+                                     class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" 
+                                     style="width: 0%">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg" id="uploadButton">
+                                <i class="fas fa-upload me-2"></i>Upload and Process
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="alert alert-success mt-4" style="display: none;">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>Success!</strong> <span id="successText"></span>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="alert alert-danger mt-4" style="display: none;">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Error:</strong> <span id="errorText"></span>
+            </div>            <!-- Sample CSV Download -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-download me-2"></i>Sample CSV Template
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Download a sample CSV file to use as a template:</p>
+                    <button class="btn btn-outline-primary" onclick="downloadSampleCSV()">
+                        <i class="fas fa-download me-2"></i>Download Sample CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Behind the Scenes Section -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-code me-2"></i>Behind the Scenes - Upload Process
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Here's what happens when you upload a CSV file:</p>
+                    
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <h6><i class="fas fa-upload me-2"></i>1. File Processing</h6>
+                            <pre class="bg-light p-3 rounded small"><code># Python validation
+required_columns = ['doc_id', 'title', 'category', 'content']
+df = pd.read_csv(uploaded_file)
+validate_csv_structure(df)</code></pre>
+                        </div>
+                        <div class="col-lg-6">
+                            <h6><i class="fas fa-database me-2"></i>2. MindsDB Insertion</h6>
+                            <pre class="bg-light p-3 rounded small"><code>INSERT INTO legalease.legal_kb_pg 
+(doc_id, title, category, content) 
+VALUES 
+(101, 'Case Title', 'Category', 'Content');</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-lg-6">
+                            <h6><i class="fas fa-brain me-2"></i>3. Embedding Generation</h6>
+                            <ul class="list-unstyled small">
+                                <li><i class="fas fa-arrow-right text-primary me-2"></i>Ollama processes content with mxbai-embed-large</li>
+                                <li><i class="fas fa-arrow-right text-primary me-2"></i>Creates 1024-dimensional vectors</li>
+                                <li><i class="fas fa-arrow-right text-primary me-2"></i>Stores in PGVector database</li>
+                            </ul>
+                        </div>
+                        <div class="col-lg-6">
+                            <h6><i class="fas fa-tags me-2"></i>4. Metadata Indexing</h6>
+                            <ul class="list-unstyled small">
+                                <li><i class="fas fa-arrow-right text-success me-2"></i>Extracts title and category metadata</li>
+                                <li><i class="fas fa-arrow-right text-success me-2"></i>Creates searchable indexes</li>
+                                <li><i class="fas fa-arrow-right text-success me-2"></i>Enables filtering capabilities</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.getElementById('uploadForm');
+    const csvFile = document.getElementById('csvFile');
+    
+    uploadForm.addEventListener('submit', handleUpload);
+    csvFile.addEventListener('change', handleFileSelect);
+});
+
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    const filePreview = document.getElementById('filePreview');
+    const fileInfo = document.getElementById('fileInfo');
+    
+    if (file) {
+        const fileSize = (file.size / 1024 / 1024).toFixed(2); // MB
+        fileInfo.innerHTML = `
+            <strong>File:</strong> ${file.name}<br>
+            <strong>Size:</strong> ${fileSize} MB<br>
+            <strong>Type:</strong> ${file.type || 'text/csv'}
+        `;
+        filePreview.style.display = 'block';
+    } else {
+        filePreview.style.display = 'none';
+    }
+}
+
+function handleUpload(event) {
+    event.preventDefault();
+    
+    const fileInput = document.getElementById('csvFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showError('Please select a CSV file');
+        return;
+    }
+    
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+        showError('Please select a valid CSV file');
+        return;
+    }
+    
+    const maxSize = 16 * 1024 * 1024; // 16MB
+    if (file.size > maxSize) {
+        showError('File size exceeds 16MB limit');
+        return;
+    }
+    
+    uploadFile(file);
+}
+
+function uploadFile(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Show progress
+    showProgress();
+    setUploadState(false);
+    
+    // Simulate progress updates
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += Math.random() * 30;
+        if (progress > 90) progress = 90;
+        updateProgress(progress);
+    }, 500);
+    
+    fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        clearInterval(progressInterval);
+        updateProgress(100);
+        
+        setTimeout(() => {
+            hideProgress();
+            setUploadState(true);
+            
+            if (data.success) {
+                showSuccess(data.message);
+                document.getElementById('uploadForm').reset();
+                document.getElementById('filePreview').style.display = 'none';
+            } else {
+                showError(data.error || 'Upload failed');
+            }
+        }, 1000);
+    })
+    .catch(error => {
+        clearInterval(progressInterval);
+        hideProgress();
+        setUploadState(true);
+        showError('Network error: ' + error.message);
+    });
+}
+
+function showProgress() {
+    document.getElementById('uploadProgress').style.display = 'block';
+    updateProgress(0);
+}
+
+function hideProgress() {
+    document.getElementById('uploadProgress').style.display = 'none';
+}
+
+function updateProgress(percentage) {
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    
+    progressBar.style.width = percentage + '%';
+    progressText.textContent = Math.round(percentage) + '%';
+    
+    if (percentage >= 100) {
+        progressBar.classList.remove('progress-bar-animated');
+        progressText.textContent = 'Processing complete!';
+    }
+}
+
+function setUploadState(enabled) {
+    const uploadButton = document.getElementById('uploadButton');
+    const csvFile = document.getElementById('csvFile');
+    
+    uploadButton.disabled = !enabled;
+    csvFile.disabled = !enabled;
+    
+    if (enabled) {
+        uploadButton.innerHTML = '<i class="fas fa-upload me-2"></i>Upload and Process';
+    } else {
+        uploadButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    }
+}
+
+function showSuccess(message) {
+    document.getElementById('successText').textContent = message;
+    document.getElementById('successMessage').style.display = 'block';
+    document.getElementById('errorMessage').style.display = 'none';
+    
+    // Auto-hide after 10 seconds
+    setTimeout(() => {
+        document.getElementById('successMessage').style.display = 'none';
+    }, 10000);
+}
+
+function showError(message) {
+    document.getElementById('errorText').textContent = message;
+    document.getElementById('errorMessage').style.display = 'block';
+    document.getElementById('successMessage').style.display = 'none';
+}
+
+function downloadSampleCSV() {
+    const csvContent = `doc_id,title,category,content
+11,Sample Legal Case,Sample Category,This is a sample legal document content for demonstration purposes.
+12,Another Case Example,Contract Law,This document contains information about contract law principles and applications.
+13,Constitutional Rights,Constitutional Law,An example document discussing constitutional rights and legal precedents.`;
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = 'legal_documents_sample.csv';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
+</script>
+{% endblock %}

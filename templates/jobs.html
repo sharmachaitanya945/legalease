@@ -1,0 +1,535 @@
+{% extends "base.html" %}
+
+{% block title %}Jobs Management - LegalEase AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="jobs-header text-center mb-5">
+                <h1 class="display-4 fw-bold text-primary">
+                    <i class="fas fa-tasks me-3"></i>Jobs Management
+                </h1>
+                <p class="lead text-muted">
+                    Manage automated tasks and scheduled processes
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Create New Job -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>Create New Job
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="createJobForm">
+                        <div class="mb-3">
+                            <label for="jobName" class="form-label fw-bold">Job Name</label>
+                            <input type="text" class="form-control" id="jobName" placeholder="e.g., ingest_from_csv" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="jobType" class="form-label fw-bold">Job Type</label>
+                            <select class="form-select" id="jobType" required>
+                                <option value="">Select job type...</option>
+                                <option value="csv_ingest">CSV Data Ingestion</option>
+                                <option value="kb_maintenance">Knowledge Base Maintenance</option>
+                                <option value="index_rebuild">Index Rebuild</option>
+                                <option value="custom">Custom Query</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="schedule" class="form-label fw-bold">Schedule</label>
+                            <select class="form-select" id="schedule" required>
+                                <option value="">Select schedule...</option>
+                                <option value="EVERY 1 HOUR">Every Hour</option>
+                                <option value="EVERY 6 HOURS">Every 6 Hours</option>
+                                <option value="EVERY 1 DAY">Daily</option>
+                                <option value="EVERY 1 WEEK">Weekly</option>
+                                <option value="EVERY 1 MONTH">Monthly</option>
+                            </select>
+                        </div>
+                        
+                        <div id="customQuerySection" class="mb-3" style="display: none;">
+                            <label for="customQuery" class="form-label fw-bold">Custom SQL Query</label>
+                            <textarea class="form-control" id="customQuery" rows="4" placeholder="Enter your custom MindsDB query..."></textarea>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Create Job
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>        <!-- Active Jobs -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Active Jobs
+                    </h5>
+                    <button class="btn btn-light btn-sm" onclick="refreshJobs()" id="refreshBtn">
+                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="activeJobsList">
+                        <!-- Active jobs will be populated here -->
+                        <div class="text-center text-muted">
+                            <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+                            <p>Loading active jobs...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Predefined Job Templates -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-template me-2"></i>Quick Job Templates
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="template-card h-100">
+                                <div class="card border-primary">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-file-csv fa-2x text-primary mb-2"></i>
+                                        <h6>CSV Auto-Ingestion</h6>
+                                        <p class="small text-muted">Automatically ingest new documents from uploaded CSV files</p>
+                                        <button class="btn btn-outline-primary btn-sm" onclick="createTemplateJob('csv_ingest')">
+                                            <i class="fas fa-plus me-1"></i>Create
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="template-card h-100">
+                                <div class="card border-info">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-database fa-2x text-info mb-2"></i>
+                                        <h6>Index Maintenance</h6>
+                                        <p class="small text-muted">Rebuild knowledge base indexes for optimal performance</p>
+                                        <button class="btn btn-outline-info btn-sm" onclick="createTemplateJob('index_maintenance')">
+                                            <i class="fas fa-plus me-1"></i>Create
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="template-card h-100">
+                                <div class="card border-warning">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-broom fa-2x text-warning mb-2"></i>
+                                        <h6>Data Cleanup</h6>
+                                        <p class="small text-muted">Remove duplicate entries and optimize storage</p>
+                                        <button class="btn btn-outline-warning btn-sm" onclick="createTemplateJob('cleanup')">
+                                            <i class="fas fa-plus me-1"></i>Create
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Behind the Scenes Section -->
+    <div class="row mt-4">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-code me-2"></i>Behind the Scenes - Job System
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Here's how MindsDB Jobs work:</p>
+                    
+                    <div class="row">
+                        <div class="col-lg-6">
+                <h6><i class="fas fa-plus me-2"></i>Creating Jobs</h6>
+                            <pre class="bg-light p-3 rounded small"><code>CREATE JOB ingest_from_csv
+AS (
+  INSERT INTO legal_kb_pg
+  SELECT
+    doc_id,
+    title,
+    category,
+    content
+  FROM files.legal_docs
+  WHERE doc_id > LAST;
+)
+EVERY 1 HOUR;</code></pre>
+                        </div>
+                        <div class="col-lg-6">
+                            <h6><i class="fas fa-list me-2"></i>Managing Jobs</h6>
+                            <pre class="bg-light p-3 rounded small"><code>-- List all jobs
+SHOW JOBS;
+
+-- Stop a job
+DROP JOB ingest_from_csv;
+
+-- Check job status
+SELECT * FROM information_schema.jobs 
+WHERE name = 'ingest_from_csv';</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-info-circle me-2"></i>Job Features:</h6>
+                        <ul class="mb-0">
+                            <li><strong>Automated Execution:</strong> Jobs run automatically on specified schedules</li>
+                            <li><strong>Incremental Processing:</strong> Only processes new data using LAST keyword</li>
+                            <li><strong>Error Handling:</strong> Built-in retry mechanisms for failed executions</li>
+                            <li><strong>Monitoring:</strong> Track job status, execution history, and performance</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div id="jobSuccessMessage" class="alert alert-success mt-4" style="display: none;">
+        <i class="fas fa-check-circle me-2"></i>
+        <strong>Success!</strong> <span id="jobSuccessText"></span>
+    </div>
+
+    <div id="jobErrorMessage" class="alert alert-danger mt-4" style="display: none;">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Error:</strong> <span id="jobErrorText"></span>
+    </div>
+
+    <!-- Executed Query Display -->
+    <div id="queryContainer" class="alert alert-info mt-4" style="display: none;">
+        <strong>Executed Query:</strong>
+        <pre id="executedQuery" class="mb-0"></pre>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadActiveJobs();
+    
+    // Set up form submission
+    document.getElementById('createJobForm').addEventListener('submit', handleCreateJob);
+    document.getElementById('jobType').addEventListener('change', handleJobTypeChange);
+});
+
+function handleJobTypeChange() {
+    const jobType = document.getElementById('jobType').value;
+    const customSection = document.getElementById('customQuerySection');
+    
+    if (jobType === 'custom') {
+        customSection.style.display = 'block';
+    } else {
+        customSection.style.display = 'none';
+    }
+}
+
+function handleCreateJob(event) {
+    event.preventDefault();
+    
+    const jobName = document.getElementById('jobName').value.trim();
+    const jobType = document.getElementById('jobType').value;
+    const schedule = document.getElementById('schedule').value;
+    const customQuery = document.getElementById('customQuery').value.trim();
+    
+    if (!jobName || !jobType || !schedule) {
+        showJobError('Please fill in all required fields');
+        return;
+    }
+    
+    if (jobType === 'custom' && !customQuery) {
+        showJobError('Please enter a custom query');
+        return;
+    }
+    
+    createJob(jobName, jobType, schedule, customQuery);
+}
+
+function createJob(name, type, schedule, customQuery = '') {
+    // Show loading state
+    const submitBtn = document.querySelector('#createJobForm button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+    
+    // Determine job query based on type
+    let requestData = {
+        name: name,
+        type: type,
+        schedule: schedule
+    };
+    
+    if (type === 'custom' && customQuery) {
+        requestData.custom_query = customQuery;
+    }
+    
+    // Call the API to create the job
+    fetch('/api/jobs', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        
+        if (data.success) {
+            showJobSuccess(`Job "${name}" created successfully!`);
+            document.getElementById('createJobForm').reset();
+            loadActiveJobs();
+              // Display executed query for transparency
+            if (data.job && data.job.query) {
+                document.getElementById('executedQuery').textContent = data.job.query;
+                document.getElementById('queryContainer').style.display = 'block';
+            } else if (data.executed_query && data.executed_query.query) {
+                document.getElementById('executedQuery').textContent = data.executed_query.query;
+                document.getElementById('queryContainer').style.display = 'block';
+            }
+        } else {
+            showJobError(data.error || 'Failed to create job');
+        }
+    })
+    .catch(error => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        showJobError('Network error: ' + error.message);
+    });
+}
+
+function createTemplateJob(templateType) {
+    const templates = {
+        'csv_ingest': {
+            name: 'auto_csv_ingestion',
+            type: 'csv_ingest',
+            schedule: 'EVERY 1 HOUR'
+        },
+        'index_maintenance': {
+            name: 'daily_index_maintenance',
+            type: 'kb_maintenance',
+            schedule: 'EVERY 1 DAY'
+        },
+        'cleanup': {
+            name: 'weekly_cleanup',
+            type: 'custom',
+            schedule: 'EVERY 1 WEEK',
+            query: 'DELETE FROM legal_kb_pg WHERE id IN (SELECT id FROM legal_kb_pg GROUP BY content HAVING COUNT(*) > 1);'
+        }
+    };
+    
+    const template = templates[templateType];
+    if (template) {
+        document.getElementById('jobName').value = template.name;
+        document.getElementById('jobType').value = template.type;
+        document.getElementById('schedule').value = template.schedule;
+        
+        if (template.query) {
+            document.getElementById('customQuery').value = template.query;
+            handleJobTypeChange();
+        }
+    }
+}
+
+function loadActiveJobs() {
+    // Fetch jobs from the API
+    fetch('/api/jobs')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Jobs API Response:', data); // Debug log
+            const activeJobsList = document.getElementById('activeJobsList');
+            
+            if (data.success && data.jobs && data.jobs.length > 0) {
+                console.log('Found jobs:', data.jobs.length); // Debug log
+                let jobsHtml = '';
+                
+                data.jobs.forEach(job => {
+                    console.log('Processing job:', job); // Debug log
+                    const jobType = getJobTypeFromSchedule(job.schedule);
+                    
+                    jobsHtml += `
+                    <div class="job-item mb-3 p-3 border rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">${job.name}</h6>
+                                <small class="text-muted">${job.schedule} • ${jobType}</small>
+                            </div>
+                            <div>
+                                <span class="badge ${job.status === 'active' ? 'bg-success' : 'bg-warning'} me-2">${job.status}</span>
+                                <button class="btn btn-sm btn-outline-danger" onclick="stopJob('${job.id}')">
+                                    <i class="fas fa-stop me-1"></i>Stop
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                });
+                
+                activeJobsList.innerHTML = jobsHtml;
+            } else {
+                console.log('No jobs found or error condition'); // Debug log
+                activeJobsList.innerHTML = `
+                    <div class="text-center text-muted p-4">
+                        <i class="fas fa-info-circle fa-2x mb-3"></i>
+                        <p>No active jobs found. Create a job to get started.</p>
+                        <small class="text-muted">Debug: ${JSON.stringify(data)}</small>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Jobs API Error:', error); // Debug log
+            const activeJobsList = document.getElementById('activeJobsList');
+            activeJobsList.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error loading jobs: ${error.message}
+                </div>
+            `;
+        });
+}
+
+function refreshJobs() {
+    // Show loading state
+    const refreshBtn = document.getElementById('refreshBtn');
+    const originalContent = refreshBtn.innerHTML;
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Refreshing...';
+    
+    // Call the jobs API (which executes SHOW JOBS)
+    fetch('/api/jobs')
+        .then(response => response.json())
+        .then(data => {
+            refreshBtn.disabled = false;
+            refreshBtn.innerHTML = originalContent;
+            
+            // Show the executed query for transparency
+            document.getElementById('executedQuery').textContent = 'SHOW JOBS;';
+            document.getElementById('queryContainer').style.display = 'block';
+            
+            // Update the jobs list
+            const activeJobsList = document.getElementById('activeJobsList');
+            
+            if (data.success && data.jobs && data.jobs.length > 0) {
+                let jobsHtml = '';
+                
+                data.jobs.forEach(job => {
+                    const jobType = getJobTypeFromSchedule(job.schedule);
+                    
+                    jobsHtml += `
+                    <div class="job-item mb-3 p-3 border rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">${job.name}</h6>
+                                <small class="text-muted">${job.schedule} • ${jobType}</small>
+                            </div>
+                            <div>
+                                <span class="badge ${job.status === 'active' ? 'bg-success' : 'bg-warning'} me-2">${job.status}</span>
+                                <button class="btn btn-sm btn-outline-danger" onclick="stopJob('${job.id}')">
+                                    <i class="fas fa-stop me-1"></i>Stop
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                });
+                
+                activeJobsList.innerHTML = jobsHtml;
+                showJobSuccess(`Found ${data.jobs.length} active job(s)`);
+            } else {
+                activeJobsList.innerHTML = `
+                    <div class="text-center text-muted p-4">
+                        <i class="fas fa-info-circle fa-2x mb-3"></i>
+                        <p>No active jobs found. Create a job to get started.</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            refreshBtn.disabled = false;
+            refreshBtn.innerHTML = originalContent;
+            showJobError('Failed to refresh jobs: ' + error.message);
+        });
+}
+
+function stopJob(jobId) {
+    if (confirm(`Are you sure you want to stop this job?`)) {
+        // Call API to stop the job
+        fetch(`/api/jobs/${jobId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())        .then(data => {
+            if (data.success) {
+                showJobSuccess(data.message || `Job has been stopped successfully`);
+                loadActiveJobs(); // Refresh the job list
+                
+                // Display executed query for transparency
+                if (data.executed_query && data.executed_query.query) {
+                    document.getElementById('executedQuery').textContent = data.executed_query.query;
+                    document.getElementById('queryContainer').style.display = 'block';
+                }
+            } else {
+                showJobError(data.error || 'Failed to stop job');
+            }
+        })
+        .catch(error => {
+            showJobError('Network error: ' + error.message);
+        });
+    }
+}
+
+function getJobTypeFromSchedule(schedule) {
+    // Extract job type from schedule string if possible
+    if (schedule.toLowerCase().includes('hour')) {
+        return 'CSV Data Ingestion';
+    } else if (schedule.toLowerCase().includes('day')) {
+        return 'Knowledge Base Maintenance';
+    } else if (schedule.toLowerCase().includes('week')) {
+        return 'Index Rebuild';
+    } else {
+        return 'Custom Job';
+    }
+}
+
+function showJobSuccess(message) {
+    document.getElementById('jobSuccessText').textContent = message;
+    document.getElementById('jobSuccessMessage').style.display = 'block';
+    document.getElementById('jobErrorMessage').style.display = 'none';
+    
+    setTimeout(() => {
+        document.getElementById('jobSuccessMessage').style.display = 'none';
+    }, 5000);
+}
+
+function showJobError(message) {
+    document.getElementById('jobErrorText').textContent = message;
+    document.getElementById('jobErrorMessage').style.display = 'block';
+    document.getElementById('jobSuccessMessage').style.display = 'none';
+}
+</script>
+{% endblock %}

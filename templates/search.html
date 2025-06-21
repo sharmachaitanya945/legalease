@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block title %}Search - LegalEase AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="search-header text-center mb-5">
+                <h1 class="display-4 fw-bold text-primary">Legal Search</h1>
+                <p class="lead text-muted">Search through legal documents using semantic understanding</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <form id="searchForm">
+                        <div class="mb-3">
+                            <label for="searchQuery" class="form-label fw-bold">Search Query</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-search"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="searchQuery" 
+                                       placeholder="e.g., What are my rights if I am arrested?"
+                                       required>
+                            </div>
+                            <div class="form-text">
+                                Use natural language to describe what you're looking for
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="categoryFilter" class="form-label fw-bold">Category Filter</label>
+                                    <select class="form-select" id="categoryFilter">
+                                        <option value="">All Categories</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="resultLimit" class="form-label fw-bold">Number of Results</label>
+                                    <select class="form-select" id="resultLimit">
+                                        <option value="3">3 Results</option>
+                                        <option value="5" selected>5 Results</option>
+                                        <option value="10">10 Results</option>
+                                        <option value="20">20 Results</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-search me-2"></i>Search Documents
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="text-center mb-4" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Searching...</span>
+        </div>
+        <p class="mt-2 text-muted">Analyzing documents with AI...</p>
+    </div>
+
+    <!-- Search Results -->
+    <div id="searchResults" style="display: none;">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="mb-0">Search Results</h3>
+                    <div id="searchInfo" class="text-muted"></div>
+                </div>
+            </div>
+        </div>
+        <div id="resultsContainer" class="row g-4">
+            <!-- Results will be populated here -->
+        </div>
+    </div>
+
+    <!-- No Results -->
+    <div id="noResults" class="text-center py-5" style="display: none;">
+        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">No Results Found</h4>
+        <p class="text-muted">Try adjusting your search query or removing filters</p>
+    </div>    <!-- Error Message -->
+    <div id="errorMessage" class="alert alert-danger" style="display: none;">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <span id="errorText">An error occurred while searching</span>
+    </div>
+
+    <!-- Behind the Scenes Section -->
+    <div class="row mt-5">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-code me-2"></i>Behind the Scenes - How Search Works
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Here's the actual MindsDB query that powers semantic search:</p>
+                    <pre class="bg-light p-3 rounded"><code>SELECT
+  id,
+  metadata,
+  chunk_content,
+  relevance
+FROM legalease.legal_kb_pg
+WHERE content LIKE 'Your search query here'
+  AND JSON_EXTRACT(metadata, '$.category') = 'Selected Category'
+ORDER BY relevance DESC
+LIMIT 5;</code></pre>
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-brain me-2"></i>Semantic Understanding</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Uses mxbai-embed-large for embeddings</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Converts text to 1024-dimensional vectors</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Finds semantically similar content</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-sort-amount-down me-2"></i>Intelligent Ranking</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success me-2"></i>Gemini 2.0 Flash reranks results</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Considers legal context and relevance</li>
+                                <li><i class="fas fa-check text-success me-2"></i>Returns relevance scores 0-1</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadCategories();
+    
+    // Set up form submission
+    document.getElementById('searchForm').addEventListener('submit', handleSearch);
+});
+
+function loadCategories() {
+    fetch('/api/categories')
+        .then(response => response.json())
+        .then(data => {
+            const categorySelect = document.getElementById('categoryFilter');
+            if (data.success && data.categories) {
+                data.categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categorySelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading categories:', error);
+        });
+}
+
+function handleSearch(event) {
+    event.preventDefault();
+    
+    const query = document.getElementById('searchQuery').value.trim();
+    const category = document.getElementById('categoryFilter').value;
+    const limit = parseInt(document.getElementById('resultLimit').value);
+    
+    if (!query) {
+        showError('Please enter a search query');
+        return;
+    }
+    
+    performSearch(query, category, limit);
+}
+
+function performSearch(query, category, limit) {
+    // Show loading indicator
+    showLoading();
+    hideResults();
+    hideError();
+    
+    const searchData = {
+        query: query,
+        category: category,
+        limit: limit
+    };
+    
+    fetch('/api/search', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(searchData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideLoading();
+        
+        if (data.success) {
+            displayResults(data);
+        } else {
+            showError(data.error || 'Search failed');
+        }
+    })
+    .catch(error => {
+        hideLoading();
+        showError('Network error: ' + error.message);
+    });
+}
+
+function displayResults(data) {
+    const resultsContainer = document.getElementById('resultsContainer');
+    const searchInfo = document.getElementById('searchInfo');
+    
+    if (data.results && data.results.length > 0) {
+        // Update search info
+        searchInfo.textContent = `Found ${data.results.length} results for "${data.query}"`;
+        if (data.category) {
+            searchInfo.textContent += ` in category "${data.category}"`;
+        }
+        
+        // Clear previous results
+        resultsContainer.innerHTML = '';
+        
+        // Display each result
+        data.results.forEach((result, index) => {
+            const resultCard = createResultCard(result, index + 1);
+            resultsContainer.appendChild(resultCard);
+        });
+        
+        showResults();
+    } else {
+        showNoResults();
+    }
+}
+
+function createResultCard(result, index) {
+    const col = document.createElement('div');
+    col.className = 'col-lg-12';
+    
+    // Parse metadata
+    let metadata = {};
+    try {
+        metadata = JSON.parse(result.metadata || '{}');
+    } catch (e) {
+        metadata = {};
+    }
+    
+    const relevancePercentage = (result.relevance * 100).toFixed(1);
+    
+    col.innerHTML = `
+        <div class="card result-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-primary me-2">#${index}</span>
+                    <strong>${metadata.title || 'Untitled Document'}</strong>
+                </div>
+                <div>
+                    <span class="badge bg-secondary me-2">${metadata.category || 'General'}</span>
+                    <span class="badge bg-success">${relevancePercentage}% relevant</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="card-text">${result.content || 'No content available'}</p>
+                <div class="result-meta text-muted">
+                    <small>
+                        <i class="fas fa-fingerprint me-1"></i>ID: ${result.id || 'N/A'}
+                        <span class="ms-3">
+                            <i class="fas fa-chart-line me-1"></i>Relevance: ${relevancePercentage}%
+                        </span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    return col;
+}
+
+function showLoading() {
+    document.getElementById('loadingIndicator').style.display = 'block';
+}
+
+function hideLoading() {
+    document.getElementById('loadingIndicator').style.display = 'none';
+}
+
+function showResults() {
+    document.getElementById('searchResults').style.display = 'block';
+    document.getElementById('noResults').style.display = 'none';
+}
+
+function hideResults() {
+    document.getElementById('searchResults').style.display = 'none';
+}
+
+function showNoResults() {
+    document.getElementById('noResults').style.display = 'block';
+    document.getElementById('searchResults').style.display = 'none';
+}
+
+function showError(message) {
+    document.getElementById('errorText').textContent = message;
+    document.getElementById('errorMessage').style.display = 'block';
+}
+
+function hideError() {
+    document.getElementById('errorMessage').style.display = 'none';
+}
+
+// Sample searches for demonstration
+function performSampleSearch(query) {
+    document.getElementById('searchQuery').value = query;
+    document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+}
+</script>
+{% endblock %}

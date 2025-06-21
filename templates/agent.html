@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+
+{% block title %}AI Assistant - LegalEase AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="agent-header text-center mb-5">
+                <h1 class="display-4 fw-bold text-primary">
+                    <i class="fas fa-robot me-3"></i>AI Legal Assistant
+                </h1>
+                <p class="lead text-muted">
+                    Ask complex legal questions and get intelligent answers powered by Gemini AI
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Quick Questions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Quick Questions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Try these sample questions:</p>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-primary btn-sm w-100" 
+                                    onclick="askSampleQuestion('What was the outcome of Gideon v. Wainwright?')">
+                                Gideon v. Wainwright outcome
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-primary btn-sm w-100" 
+                                    onclick="askSampleQuestion('What are Miranda rights?')">
+                                Miranda rights explanation
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-primary btn-sm w-100" 
+                                    onclick="askSampleQuestion('What is the significance of Brown v. Board of Education?')">
+                                Brown v. Board significance
+                            </button>
+                        </div>
+                        <div class="col-md-6">
+                            <button class="btn btn-outline-primary btn-sm w-100" 
+                                    onclick="askSampleQuestion('What rights do students have in schools?')">
+                                Student rights in schools
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Interface -->
+            <div class="card chat-card">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-robot fa-2x me-3"></i>
+                        <div>
+                            <h5 class="mb-0">LegalEase AI Assistant</h5>
+                            <small class="opacity-75">Powered by Gemini 2.0 Flash</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chat Messages -->
+                <div id="chatMessages" class="chat-messages p-4">
+                    <div class="message assistant-message">
+                        <div class="message-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-bubble">
+                                <p class="mb-0">
+                                    Hello! I'm your AI legal assistant. I can help you understand legal concepts, 
+                                    analyze case law, and answer questions about the legal documents in our knowledge base.
+                                    What would you like to know?
+                                </p>
+                            </div>
+                            <div class="message-time">Just now</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Form -->
+                <div class="card-footer">
+                    <form id="questionForm" class="d-flex align-items-center">
+                        <div class="flex-grow-1 me-3">
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="fas fa-question-circle"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="questionInput" 
+                                       placeholder="Ask a legal question..."
+                                       required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="askButton">
+                            <i class="fas fa-paper-plane me-2"></i>Ask
+                        </button>
+                    </form>
+                    <div class="form-text mt-2">
+                        <i class="fas fa-info-circle me-1"></i>
+                        This AI assistant searches through our legal knowledge base to provide accurate answers.
+                    </div>
+                </div>
+            </div>            <!-- Related Search Results -->
+            <div id="relatedResults" class="mt-4" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-search me-2"></i>Related Documents
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="relatedContent">
+                            <!-- Related search results will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Behind the Scenes Section -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-code me-2"></i>Behind the Scenes - AI Agent Process
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Here's how the AI Legal Assistant works:</p>
+                    
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <h6><i class="fas fa-robot me-2"></i>1. Agent Query</h6>
+                            <pre class="bg-light p-3 rounded small"><code>SELECT answer
+FROM legalease.legal_gemini_agent
+WHERE question = 'Your legal question here';</code></pre>
+                            
+                            <h6 class="mt-3"><i class="fas fa-search me-2"></i>2. Knowledge Base Search</h6>
+                            <pre class="bg-light p-3 rounded small"><code>SELECT chunk_content, metadata, relevance
+FROM legalease.legal_kb_pg
+WHERE content LIKE 'question context'
+ORDER BY relevance DESC;</code></pre>
+                        </div>
+                        <div class="col-lg-6">
+                            <h6><i class="fas fa-cogs me-2"></i>3. Agent Configuration</h6>
+                            <pre class="bg-light p-3 rounded small"><code>CREATE AGENT legal_gemini_agent
+USING
+    model = 'gemini-2.0-flash',
+    include_knowledge_bases = ['legalease.legal_kb_pg'],
+    prompt_template = '
+        You are LegalEase AI, a legal assistant.
+        Use the legal knowledge base to answer questions.
+        Quote exact case excerpts if relevant.
+        Question: {{question}}
+    ';</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3">
+                        <h6><i class="fas fa-info-circle me-2"></i>How It Works:</h6>
+                        <ol class="mb-0">
+                            <li><strong>Query Processing:</strong> Your question is analyzed by Gemini 2.0 Flash</li>
+                            <li><strong>Knowledge Retrieval:</strong> Relevant legal documents are fetched from the knowledge base</li>
+                            <li><strong>Context Integration:</strong> The AI combines your question with relevant case law</li>
+                            <li><strong>Response Generation:</strong> Gemini generates a comprehensive legal answer with citations</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('questionForm').addEventListener('submit', handleQuestion);
+    
+    // Auto-resize input and scroll to bottom
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+});
+
+function handleQuestion(event) {
+    event.preventDefault();
+    
+    const questionInput = document.getElementById('questionInput');
+    const question = questionInput.value.trim();
+    
+    if (!question) return;
+    
+    // Add user message to chat
+    addUserMessage(question);
+    
+    // Clear input and disable form
+    questionInput.value = '';
+    setFormState(false);
+    
+    // Ask the AI agent
+    askAgent(question);
+}
+
+function askSampleQuestion(question) {
+    document.getElementById('questionInput').value = question;
+    document.getElementById('questionForm').dispatchEvent(new Event('submit'));
+}
+
+function askAgent(question) {
+    // Add thinking indicator
+    const thinkingId = addThinkingMessage();
+    
+    fetch('/api/agent', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ question: question })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Remove thinking indicator
+        removeThinkingMessage(thinkingId);
+        
+        if (data.success) {
+            addAssistantMessage(data.answer);
+            
+            // Optionally perform related search
+            performRelatedSearch(question);
+        } else {
+            addErrorMessage(data.error || 'Failed to get response from AI assistant');
+        }
+        
+        setFormState(true);
+    })
+    .catch(error => {
+        removeThinkingMessage(thinkingId);
+        addErrorMessage('Network error: ' + error.message);
+        setFormState(true);
+    });
+}
+
+function performRelatedSearch(question) {
+    // Perform a search to show related documents
+    fetch('/api/search', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+            query: question, 
+            limit: 3 
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.results && data.results.length > 0) {
+            showRelatedResults(data.results);
+        }
+    })
+    .catch(error => {
+        console.error('Related search error:', error);
+    });
+}
+
+function addUserMessage(message) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message user-message';
+    
+    messageDiv.innerHTML = `
+        <div class="message-content">
+            <div class="message-bubble">
+                <p class="mb-0">${escapeHtml(message)}</p>
+            </div>
+            <div class="message-time">${getCurrentTime()}</div>
+        </div>
+        <div class="message-avatar">
+            <i class="fas fa-user"></i>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    scrollToBottom();
+}
+
+function addAssistantMessage(message) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message assistant-message';
+    
+    // Format the message (convert newlines to paragraphs)
+    const formattedMessage = formatMessage(message);
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+            <div class="message-bubble">
+                ${formattedMessage}
+            </div>
+            <div class="message-time">${getCurrentTime()}</div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    scrollToBottom();
+}
+
+function addThinkingMessage() {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message assistant-message thinking-message';
+    const thinkingId = 'thinking-' + Date.now();
+    messageDiv.id = thinkingId;
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+            <div class="message-bubble">
+                <div class="thinking-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <em class="ms-2">Analyzing legal documents...</em>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    scrollToBottom();
+    
+    return thinkingId;
+}
+
+function removeThinkingMessage(thinkingId) {
+    const thinkingMessage = document.getElementById(thinkingId);
+    if (thinkingMessage) {
+        thinkingMessage.remove();
+    }
+}
+
+function addErrorMessage(error) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message assistant-message error-message';
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="message-content">
+            <div class="message-bubble">
+                <p class="mb-0 text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${escapeHtml(error)}
+                </p>
+            </div>
+            <div class="message-time">${getCurrentTime()}</div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    scrollToBottom();
+}
+
+function showRelatedResults(results) {
+    const relatedResults = document.getElementById('relatedResults');
+    const relatedContent = document.getElementById('relatedContent');
+    
+    let html = '';
+    results.forEach((result, index) => {
+        let metadata = {};
+        try {
+            metadata = JSON.parse(result.metadata || '{}');
+        } catch (e) {
+            metadata = {};
+        }
+        
+        const relevancePercentage = (result.relevance * 100).toFixed(1);
+        
+        html += `
+            <div class="related-item mb-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="mb-0">${metadata.title || 'Untitled Document'}</h6>
+                    <span class="badge bg-secondary">${relevancePercentage}% relevant</span>
+                </div>
+                <p class="text-muted small mb-1">${result.content || 'No content available'}</p>
+                <div class="text-muted">
+                    <small>
+                        <span class="badge bg-light text-dark me-2">${metadata.category || 'General'}</span>
+                        ID: ${result.id || 'N/A'}
+                    </small>
+                </div>
+            </div>
+        `;
+    });
+    
+    relatedContent.innerHTML = html;
+    relatedResults.style.display = 'block';
+}
+
+function setFormState(enabled) {
+    const questionInput = document.getElementById('questionInput');
+    const askButton = document.getElementById('askButton');
+    
+    questionInput.disabled = !enabled;
+    askButton.disabled = !enabled;
+    
+    if (enabled) {
+        askButton.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Ask';
+        questionInput.focus();
+    } else {
+        askButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Thinking...';
+    }
+}
+
+function scrollToBottom() {
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function getCurrentTime() {
+    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatMessage(message) {
+    // Basic formatting: convert newlines to paragraphs and handle basic markdown
+    return message
+        .split('\n\n')
+        .map(paragraph => `<p class="mb-2">${escapeHtml(paragraph)}</p>`)
+        .join('');
+}
+</script>
+{% endblock %}

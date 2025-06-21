@@ -1,0 +1,162 @@
+# LegalEase AI - Docker Compose Setup
+# This docker-compose.yml provides all required services:
+# - MindsDB server
+# - PostgreSQL with pgvector extension  
+# - Ollama with mxbai-embed-large model
+
+version: '3.8'
+
+services:
+  # PostgreSQL with pgvector extension for vector storage
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: legalease_postgres
+    environment:
+      POSTGRES_DB: legal_vector_db
+      POSTGRES_USER: legalease_user
+      POSTGRES_PASSWORD: legalease_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U legalease_user -d legal_vector_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - legalease_network
+
+  # MindsDB server
+  mindsdb:
+    image: mindsdb/mindsdb:latest
+    container_name: legalease_mindsdb
+    ports:
+      - "47334:47334"
+      - "47335:47335"
+    environment:
+      - MINDSDB_STORAGE_DIR=/root/mdb_storage
+    volumes:
+      - mindsdb_data:/root/mdb_storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:47334/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - legalease_network
+
+  # Ollama server with mxbai-embed-large model
+  ollama:
+    image: ollama/ollama:latest
+    container_name: legalease_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - legalease_network
+
+  # Model downloader service to pull mxbai-embed-large
+  ollama-puller:
+    image: ollama/ollama:latest
+    container_name: legalease_ollama_puller
+    depends_on:
+      ollama:
+        condition: service_healthy
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=ollama:11434
+    command: >
+      sh -c "
+        echo 'Waiting for Ollama to be ready...' &&
+        sleep 10 &&
+        echo 'Pulling mxbai-embed-large model...' &&
+        ollama pull mxbai-embed-large &&
+        echo 'Model download complete!'
+      "
+    networks:
+      - legalease_network
+
+  # LegalEase AI Web Application
+  legalease-app:
+    build: .
+    container_name: legalease_app
+    ports:
+      - "5000:5000"
+    environment:
+      # MindsDB Configuration
+      - MINDSDB_HOST=mindsdb
+      - MINDSDB_PORT=47334
+      - MINDSDB_DATABASE=legalease
+      
+      # Ollama Configuration
+      - OLLAMA_BASE_URL=http://ollama:11434
+      
+      # PostgreSQL Configuration
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=legal_vector_db
+      - POSTGRES_USER=legalease_user
+      - POSTGRES_PASSWORD=legalease_password
+      
+      # Flask Configuration
+      - FLASK_HOST=0.0.0.0
+      - FLASK_PORT=5000
+      - FLASK_DEBUG=True
+      - FLASK_SECRET_KEY=your_super_secret_key_min_32_chars_long_for_production
+      
+      # Google API Key (set this in your .env file)
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      
+      # Security
+      - MAX_CONTENT_LENGTH=16777216
+      - UPLOAD_FOLDER=uploads
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    depends_on:
+      mindsdb:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      ollama-puller:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - legalease_network
+
+# Named volumes for persistent data
+volumes:
+  postgres_data:
+    driver: local
+  mindsdb_data:
+    driver: local
+  ollama_data:
+    driver: local
+
+# Network for service communication
+networks:
+  legalease_network:
+    driver: bridge

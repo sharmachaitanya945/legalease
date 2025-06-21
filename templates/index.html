@@ -1,0 +1,269 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold text-primary mb-4">
+                    LegalEase AI
+                </h1>
+                <p class="lead mb-4">
+                    Intelligent legal research powered by advanced AI. Search through legal documents, 
+                    get instant answers, and discover relevant case law with semantic understanding.
+                </p>
+                <div class="d-flex gap-3 mb-4">
+                    <a href="{{ url_for('search_page') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-search me-2"></i>Start Searching
+                    </a>
+                    <a href="{{ url_for('agent_page') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-robot me-2"></i>Ask AI Assistant
+                    </a>
+                </div>
+                <div class="status-indicator">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status" id="statusSpinner">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span id="statusText">Checking system status...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="feature-card p-4">
+                    <div class="row g-4">
+                        <div class="col-sm-6">
+                            <div class="feature-item text-center">
+                                <div class="feature-icon">
+                                    <i class="fas fa-brain"></i>
+                                </div>
+                                <h5>Semantic Search</h5>
+                                <p class="text-muted">Find relevant legal documents using natural language</p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="feature-item text-center">
+                                <div class="feature-icon">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <h5>AI Assistant</h5>
+                                <p class="text-muted">Get intelligent answers to complex legal questions</p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="feature-item text-center">
+                                <div class="feature-icon">
+                                    <i class="fas fa-filter"></i>
+                                </div>
+                                <h5>Smart Filtering</h5>
+                                <p class="text-muted">Filter by category, relevance, and metadata</p>
+                            </div>
+                        </div>                        <div class="col-sm-6">
+                            <div class="feature-item text-center">
+                                <div class="feature-icon">
+                                    <i class="fas fa-upload"></i>
+                                </div>
+                                <h5>Easy Upload</h5>
+                                <p class="text-muted">Upload CSV documents to expand the knowledge base</p>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="feature-item text-center">
+                                <div class="feature-icon">
+                                    <i class="fas fa-tasks"></i>
+                                </div>
+                                <h5>Job Management</h5>
+                                <p class="text-muted">Schedule automated tasks and data processing</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center mb-5">
+                <h2 class="display-5 fw-bold">How It Works</h2>
+                <p class="lead text-muted">Understanding LegalEase AI's powerful features</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="how-it-works-item">
+                    <div class="step-number">1</div>
+                    <h4>Semantic Search</h4>
+                    <p>
+                        Our system uses <strong>mxbai-embed-large</strong> via Ollama to convert your queries 
+                        and legal documents into semantic embeddings. This allows you to find relevant 
+                        content even when exact keywords don't match.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="how-it-works-item">
+                    <div class="step-number">2</div>
+                    <h4>Intelligent Reranking</h4>
+                    <p>
+                        <strong>Gemini 2.0 Flash</strong> reranks search results to ensure the most 
+                        relevant documents appear first. The system considers context, legal precedence, 
+                        and document importance.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="how-it-works-item">
+                    <div class="step-number">3</div>
+                    <h4>AI-Powered Answers</h4>
+                    <p>
+                        Our legal AI agent, powered by <strong>Gemini 2.0 Flash</strong>, provides 
+                        comprehensive answers by analyzing the knowledge base and citing relevant 
+                        case excerpts and legal precedents.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Quick Actions -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center mb-5">
+                <h2 class="display-5 fw-bold">Quick Actions</h2>
+                <p class="lead text-muted">Get started with these common tasks</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-3">
+                <div class="quick-action-card">
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <i class="fas fa-search fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Search Legal Cases</h5>
+                            <p class="card-text">Find relevant case law and legal precedents</p>
+                            <a href="{{ url_for('search_page') }}" class="btn btn-primary">Search Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="quick-action-card">
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <i class="fas fa-robot fa-3x text-success mb-3"></i>
+                            <h5 class="card-title">Ask AI Assistant</h5>
+                            <p class="card-text">Get intelligent answers to legal questions</p>
+                            <a href="{{ url_for('agent_page') }}" class="btn btn-success">Ask Question</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="quick-action-card">
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <i class="fas fa-upload fa-3x text-warning mb-3"></i>
+                            <h5 class="card-title">Upload Documents</h5>
+                            <p class="card-text">Add new legal documents to the knowledge base</p>
+                            <a href="{{ url_for('upload_page') }}" class="btn btn-warning">Upload CSV</a>
+                        </div>
+                    </div>
+                </div>
+            </div>            <div class="col-md-6 col-lg-3">
+                <div class="quick-action-card">
+                    <div class="card h-100 text-center">
+                        <div class="card-body">
+                            <i class="fas fa-tasks fa-3x text-info mb-3"></i>
+                            <h5 class="card-title">Manage Jobs</h5>
+                            <p class="card-text">Schedule automated tasks and data processing</p>
+                            <a href="{{ url_for('jobs_page') }}" class="btn btn-info">Manage Jobs</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Check system status on page load
+document.addEventListener('DOMContentLoaded', function() {
+    checkSystemStatus();
+});
+
+function checkSystemStatus() {
+    const statusSpinner = document.getElementById('statusSpinner');
+    const statusText = document.getElementById('statusText');
+    
+    fetch('/api/status')
+        .then(response => response.json())
+        .then(data => {
+            statusSpinner.style.display = 'none';
+            
+            if (data.overall) {
+                statusText.innerHTML = '<i class="fas fa-check-circle text-success me-2"></i>All systems operational';
+            } else {
+                let issues = [];
+                if (!data.mindsdb) issues.push('MindsDB');
+                if (!data.ollama) issues.push('Ollama');
+                
+                statusText.innerHTML = `<i class="fas fa-exclamation-triangle text-warning me-2"></i>Issues detected: ${issues.join(', ')}`;
+            }
+        })
+        .catch(error => {
+            statusSpinner.style.display = 'none';
+            statusText.innerHTML = '<i class="fas fa-times-circle text-danger me-2"></i>Unable to check status';
+        });
+}
+
+function initializeSystem() {
+    const button = event.target;
+    const originalText = button.textContent;
+    
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Initializing...';
+    
+    fetch('/api/initialize', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            button.className = 'btn btn-success';
+            button.innerHTML = '<i class="fas fa-check me-2"></i>Initialized';
+            
+            // Show detailed results
+            let message = 'System initialized successfully:\n';
+            data.results.forEach(result => {
+                message += `• ${result.step}: ${result.status}\n`;
+            });
+            alert(message);
+        } else {
+            throw new Error(data.error || 'Initialization failed');
+        }
+    })
+    .catch(error => {
+        button.disabled = false;
+        button.className = 'btn btn-danger';
+        button.textContent = 'Failed';
+        alert('Initialization failed: ' + error.message);
+        
+        setTimeout(() => {
+            button.className = 'btn btn-info';
+            button.textContent = originalText;
+        }, 3000);
+    });
+}
+</script>
+{% endblock %}
