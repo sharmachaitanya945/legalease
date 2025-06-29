@@ -10,12 +10,16 @@ A comprehensive legal research web application powered by MindsDB, Ollama, and G
 
 ## 📺 Demo & Documentation
 
-### 🎥 Video Walkthrough
-📹 **YouTube Demo**: *Coming Soon!* - Complete application walkthrough and setup guide
+### 🎥 Video Walkthrough  
+[![Watch the video](https://img.youtube.com/vi/ldR5es2bVZk/maxresdefault.jpg)](https://www.youtube.com/watch?v=ldR5es2bVZk)
+
 
 ### 📝 Blog Posts
-📖 **Medium.com**: *Coming Soon!* - Deep dive into MindsDB Knowledge Base integration  
-📖 **Dev.to**: *Coming Soon!* - Building AI-powered legal research with semantic search
+
+📖 **Medium**: [LegalEase AI – Building a Semantic Legal Research Assistant using MindsDB, Gemini and Ollama](https://medium.com/@sharmachaitanya945/legalease-ai-building-a-semantic-legal-research-assistant-using-mindsdb-gemini-and-ollama-c2a4bb69e8b4)
+
+📖 **Dev.to**: [How I Built LegalEase AI – A Semantic Legal Assistant with MindsDB, Gemini & Ollama](https://dev.to/sharmachaitanya945/how-i-built-legalease-ai-a-semantic-legal-assistant-with-mindsdb-gemini-ollama-39j7)
+
 
 ### 📋 Project Documentation
 📄 **[SUBMISSION.md](SUBMISSION.md)** - Complete rubric compliance mapping and implementation details
